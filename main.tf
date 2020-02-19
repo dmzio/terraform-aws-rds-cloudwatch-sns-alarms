@@ -6,10 +6,10 @@ data "aws_caller_identity" "default" {}
 
 resource "aws_db_event_subscription" "default" {
   name_prefix = "${var.alarm_name_prefix}${var.db_instance_id}-"
-  sns_topic   = "${local.aws_sns_topic_arn}"
+  sns_topic   = local.aws_sns_topic_arn
 
   source_type = "db-instance"
-  source_ids  = ["${var.db_instance_id}"]
+  source_ids  = [var.db_instance_id]
 
   event_categories = [
     "failover",
@@ -25,28 +25,28 @@ resource "aws_db_event_subscription" "default" {
 
 # Make a topic
 resource "aws_sns_topic" "default_prefix" {
-  count       = "${var.sns_topic == "" ? 1 : 0}"
+  count       = var.sns_topic == "" ? 1 : 0
   name_prefix = "rds-threshold-alerts"
 }
 
 resource "aws_sns_topic" "default" {
-  count = "${var.sns_topic != "" ? 1 : 0}"
-  name  = "${var.sns_topic}"
+  count = var.sns_topic != "" ? 1 : 0
+  name  = var.sns_topic
 }
 
 locals {
-  aws_sns_topic_arn = "${var.sns_topic == "" ?
+  aws_sns_topic_arn = var.sns_topic == "" ?
                        element(concat(aws_sns_topic.default_prefix.*.arn, list("")), 0) :
-                       element(concat(aws_sns_topic.default.*.arn, list("")), 0)}"
+                       element(concat(aws_sns_topic.default.*.arn, list("")), 0)
 
-  aws_sns_topic_name = "${var.sns_topic == "" ?
+  aws_sns_topic_name = var.sns_topic == "" ?
                         element(concat(aws_sns_topic.default_prefix.*.name, list("")), 0) :
-                        var.sns_topic}"
+                        var.sns_topic
 }
 
 resource "aws_sns_topic_policy" "default" {
-  arn    = "${local.aws_sns_topic_arn}"
-  policy = "${data.aws_iam_policy_document.sns_topic_policy.json}"
+  arn    = local.aws_sns_topic_arn
+  policy = data.aws_iam_policy_document.sns_topic_policy.json
 }
 
 data "aws_iam_policy_document" "sns_topic_policy" {
@@ -68,7 +68,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     ]
 
     effect    = "Allow"
-    resources = ["${local.aws_sns_topic_arn}"]
+    resources = [local.aws_sns_topic_arn]
 
     principals {
       type        = "AWS"
@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
       variable = "AWS:SourceOwner"
 
       values = [
-        "${data.aws_caller_identity.default.account_id}",
+        data.aws_caller_identity.default.account_id,
       ]
     }
   }
@@ -88,7 +88,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
   statement {
     sid       = "Allow CloudwatchEvents"
     actions   = ["sns:Publish"]
-    resources = ["${local.aws_sns_topic_arn}"]
+    resources = [local.aws_sns_topic_arn]
 
     principals {
       type        = "Service"
@@ -99,7 +99,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
   statement {
     sid       = "Allow RDS Event Notification"
     actions   = ["sns:Publish"]
-    resources = ["${local.aws_sns_topic_arn}"]
+    resources = [local.aws_sns_topic_arn]
 
     principals {
       type        = "Service"
