@@ -1,7 +1,6 @@
-variable "sns_topic" {
-  description = "SNS topic you want to specify. If leave empty, it will use a prefix and a timestampe appended"
+variable "sns_topic_arn" {
+  description = "SNS topic ARN you want to specify."
   type        = string
-  default     = ""
 }
 
 variable "alarm_name_prefix" {
