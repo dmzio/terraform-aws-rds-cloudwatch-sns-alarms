@@ -20,7 +20,7 @@ resource "aws_db_event_subscription" "default" {
     "recovery",
   ]
 
-  depends_on = ["aws_sns_topic_policy.default"]
+  depends_on = [aws_sns_topic_policy.default]
 }
 
 
